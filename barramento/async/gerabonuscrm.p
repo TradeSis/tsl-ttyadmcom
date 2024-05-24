@@ -1,3 +1,5 @@
+/* helio 08022022 - Projeto BI Eletromóveis - campo acao */
+
 def new global shared var scontador as int.
 
 def input parameter par-rec as recid.
@@ -17,7 +19,8 @@ def temp-table ttbonuscrm no-undo serialize-name 'bonusCrm'
     field valor         as char
     field vencimento    as char /*    ":"2020-01-30", */
     field tstatus       as char serialize-name 'status'
-    field dataUtilizacao    as char.
+    field dataUtilizacao    as char
+    field acao          as char  .
 
 DEFINE DATASET bonusCrmEntrada FOR ttbonuscrm.
 
@@ -38,11 +41,16 @@ dataEmisao  =   string(year(titulo.titdtemi),"9999") + "-" +
                  string(day(titulo.titdtemi),"99"). 
 
         if titulo.titobs[1] <> "" 
-        then do: 
+        then do:  
+            ttbonuscrm.acao      = trim(titulo.titobs[1]). /* helio 08022022 */
+        
             find acao where acao.acaocod = int(titulo.titobs[1])
                       no-lock no-error. 
             if avail acao 
-            then ttbonuscrm.descricao = acao.descricao. 
+            then do:
+                ttbonuscrm.descricao = acao.descricao. 
+                ttbonuscrm.acao      = string(acao.acaocod). /* helio 08022022 */
+            end.    
         end.
         else if titulo.titobs[2] <> ""
         then do.
