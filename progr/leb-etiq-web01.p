@@ -1,3 +1,5 @@
+/* helio 30052023 - acerto do preco em /admcom/progr/etiq-moda.d */
+/* helio 24052023 - Demanda 291 Erro de impressão no TS Etiquetas */
 /* helio 20072022 https://trello.com/c/IyQtjCHX/703-alterar-regra-de-precifica%C3%A7%C3%A3o-do-ts-etiquetas *
             ajuste para ler primeiro preco existente, nao mais somente loja 1 */
 
@@ -382,7 +384,7 @@ procedure p-insere-dados:
                 vvalor = trim(string(tt-etiq.procod, ">>>>>>>>9")) + "^FS".
                 
             when 25 or when 51 then
-                vvalor = string(tt-etiq.preco, ">>9.99").
+                vvalor = string(tt-etiq.preco, ">>>9.99"). /* helio 23052023 */
                 
             when 27 or when 53 then
                 vvalor = string(tt-etiq.setor, "x(24)").

@@ -47,7 +47,7 @@ end.
     if pidPropostaAdesaoLebes <> ?
     then do:
         find first ttproposta.
-        ttproposta.valorTotal     = ttseguro.coberturaValor * if pqtdvezes > 0 then 1 else pqtdvezes.
+        ttproposta.valorTotal     = ttseguro.coberturaValor * if pqtdvezes = 0 then 1 else pqtdvezes.
         ttproposta.cpf            = pcpf.
         for each ttrespostas:
             if ttrespostas.campocodigo =  "contratante.dadosPessoais.nome" 
