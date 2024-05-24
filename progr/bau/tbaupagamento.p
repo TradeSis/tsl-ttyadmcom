@@ -166,7 +166,7 @@ repeat:
         find ttpagamento where recid(ttpagamento) = recatu1 no-lock.
         find baupagamento where recid(baupagamento) = ttpagamento.rec no-lock.
 
-        esqcom1[3] = if psituacao = "Conciliacao" then "arquivo" else if psituacao = "repasse" then "Repasse" else "csv". 
+        esqcom1[3] = if psituacao = "Conciliacao" then "arquivo" else if psituacao = "repasse" then "Repasse" else " csv". 
 
         status default "".
         
@@ -502,9 +502,9 @@ pause 1 no-message.
 output to value(varqcsv).
 
 put unformatted 
-        "CPF ADESAO;NOME CLIENTE LEBES;NOME PACIENTE;DATA VENDA;DATA INICIO VIGENCIA;DATA FIM VIGENCIA;PLANO PGTO;STATUS VENDA;"   
-        "DATA CANCELAMENTO;CERTIFICADO;LOJA;VALOR VENDA;VALOR REPASSE;VENDEDOR;PDV;NSU;"
-        skip.
+"TipoPagamento;Filial;CPF;Cliente;ID;Valor;Data venda;ContratoVendedor;"
+    skip.
+
     for each ttpagamento.
         find baupagamento where recid(baupagamento) = ttpagamento.rec no-lock.
         run geraCsvImp.
@@ -534,55 +534,57 @@ def var vcxacod         as int.
 def var vdtinivig       as date.
 def var vdtfimvig       as date.
 
-    find baupagdados of baupagamento where baupagdados.idcampo = "proposta.dataInicioVigencia" no-lock no-error.
-    vdtinivig   = if avail baupagdados 
-        then date(int(entry(2,baupagdados.conteudo,"-")), int(entry(3,baupagdados.conteudo,"-")),int(entry(1,baupagdados.conteudo,"-")))
-        else ?.
-    find baupagdados of baupagamento where baupagdados.idcampo = "proposta.dataFimVigencia" no-lock no-error.
-    vdtfimvig   = if avail baupagdados 
-        then date(int(entry(2,baupagdados.conteudo,"-")), int(entry(3,baupagdados.conteudo,"-")),int(entry(1,baupagdados.conteudo,"-")))
-        else ?.
-
-    find baupagdados of baupagamento where baupagdados.idcampo = "proposta.cliente.nome" no-lock no-error.
-    vnomepaciente   = if avail baupagdados then baupagdados.conteudo else "".
-
-    release clien.
-    if baupagamento.clicod <> 0 and baupagamento.clicod <> ?
-    then do:
-        find clien where clien.clicod = baupagamento.clicod no-lock no-error.    
-    end.        
-    vnomecliente    =  if avail clien then clien.clinom else vnomepaciente.
-    
-    vstatus = if baupagamento.dtcanc = ? then "ATIVA" else if baupagamento.dtcanc - baupagamento.datatransacao <= 8 then "ANULADO" else "CANCELADA". 
-    
-    find baupagdados of baupagamento where baupagdados.idcampo = "proposta.codigoVendedor" no-lock no-error.
-    vvendedor = baupagdados.conteudo + "-" .
-    find func where func.etbcod = baupagamento.etbcod and func.funcod = int(baupagdados.conteudo) no-lock no-error.
-    if avail func then vvendedor = vvendedor + func.funnom.
-    find cmon of baupagamento no-lock no-error.
-    vcxacod = if avail cmon then cmon.cxacod else 0.
+        find baupagamento where recid(baupagamento) = ttpagamento.rec no-lock.
         
-    put unformatted 
-        string(baupagamento.cpf,"99999999999")       vcp
-        vnomecliente    vcp
-        vnomepaciente   vcp
-        string(baupagamento.dataTransacao,"99/99/9999") vcp
-        if vdtinivig = ? then "" else string(vdtinivig,"99/99/9999")       vcp
-        if vdtfimvig = ? then "" else string(vdtfimvig,"99/99/9999")       vcp
-        baupagamento.fincod         vcp
-        vstatus         vcp
-        if baupagamento.dtcanc = ? then "" else string(baupagamento.dtcanc,"99/99/9999") vcp
-        baupagamento.idpagamento vcp
-        baupagamento.etbcod            vcp
-        
-        trim(replace(string(baupagamento.valorServico,"->>>>>>>>>>>>>>>>>>>>>>9.99"),".",","))      vcp
-        trim(replace(string(vvlrrepasse,"->>>>>>>>>>>>>>>>>>>>>>9.99"),".",","))                 vcp
-        
-        vvendedor                   vcp
-        vcxacod                    vcp
-        baupagamento.nsuTransacao      vcp
-        skip.
+        /*vtipolancamento = if baupagamento.tipoPagamento = "VENDAOUTROS" or 
+                             baupagamento.tipoPagamento = "PAGAMENTO"
+                          then "02"
+                          else "01".   
             
+            /* #06102022 helio - somente parcela 1 eh venda */
+            if baupagparcelas.adepar > 1
+            then vtipolancamento = "02".
+        */
+/*
+Operação(ões) realizada(s) na Seg repassa na Qui
+Operação(ões) realizada(s) na Ter repassa na Sex
+Operação(ões) realizada(s) na Qua repassa na Seg
+Operação(ões) realizada(s) na Qui repassa na Ter
+Operação(ões) realizada(s) na Sex, Sáb e Dom repassa na Qua
+
+*/
+            if weekday(baupagamento.dataTransacao) = 2 /* segunda */
+            then vdias = 3.
+            if weekday(baupagamento.dataTransacao) = 3 
+            then vdias = 3.
+            if weekday(baupagamento.dataTransacao) = 4 
+            then vdias = 5.
+            if weekday(baupagamento.dataTransacao) = 5 
+            then vdias = 5.
+            if weekday(baupagamento.dataTransacao) = 6  
+            then vdias = 5.
+            if weekday(baupagamento.dataTransacao) = 7  
+            then vdias = 4.
+            if weekday(baupagamento.dataTransacao) = 1  
+            then vdias = 3.
+
+            /*vdtrepasse = baupagamento.dataTransacao + vdias.*/
+        for each baupagparcelas of baupagamento no-lock.
+            put unformatted 
+                baupagamento.tipoPagamento vcp
+                baupagamento.etbcod     vcp
+                (if baupagamento.cpf = 0 then "" else string(baupagamento.cpf,"99999999999")) vcp
+                baupagamento.idpagamento
+
+                trim(string(baupagparcelas.valor,">>>>>>9.99")) vcp
+                baupagamento.dataTransacao format "99/99/9999" vcp
+                
+                baupagparcelas.codigoBarras vcp
+                baupagparcelas.adepar  vcp
+        
+                skip.
+         end.                       
+                        
 
 end procedure.
  
@@ -643,7 +645,7 @@ def var tqtd as int.
 def var tvlr as dec.
  
 def var varqcsv as char format "x(65)".
-    varqcsv = "/admcom/relat/baupahamento_" + lc(psituacao) + "_" + 
+    varqcsv = "/admcom/relat/baupagamento_" + lc(psituacao) + "_" + 
                 string(today,"999999") + replace(string(time,"HH:MM:SS"),":","") + "_LEBES.csv".
     
     
