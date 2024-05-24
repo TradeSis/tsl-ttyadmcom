@@ -32,5 +32,8 @@ def var vchar as char.
         clienstahist.idstatuscad-novo = pidstatuscad.
         clien.idstatuscad             = pidstatuscad.
     
-    
+        if ptabini = "STATUSCAD_FALECIDO"    
+        then do:
+            clien.falecido = yes.
+        end.
     end.
