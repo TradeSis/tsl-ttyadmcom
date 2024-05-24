@@ -72,7 +72,7 @@ def  {1} shared temp-table ttplanos no-undo serialize-name "planos"
 
 
 def dataset medicoSaida for ttmedprodu, ttcampos, ttopcoes, ttplanos
-    DATA-RELATION rel1 for ttmedprodu , ttcampos RELATION-FIELDS (ttmedprodu.idPerfil,ttcampos.IDPerfil) NESTED
+/*    DATA-RELATION rel1 for ttmedprodu , ttcampos RELATION-FIELDS (ttmedprodu.idPerfil,ttcampos.IDPerfil) NESTED*/
     DATA-RELATION rel2 for ttcampos   , ttopcoes RELATION-FIELDS (ttcampos.ID,ttopcoes.IDPAI) nested
     DATA-RELATION rel3 for ttmedprodu , ttplanos RELATION-FIELDS (ttmedprodu.procod,ttplanos.procod).
      
