@@ -3,7 +3,7 @@ for each cretrigger
         titnat = yes        and 
         dtenveis4bonus = ?  and
         tabela = "titulo" and
-        dtinc >= today -  100
+        dtinc >= today -  100 or dtalt >= today - 7
     no-lock.
 
     run /admcom/barramento/async/gerabonuscrm.p (input trecid).
