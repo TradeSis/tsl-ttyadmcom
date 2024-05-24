@@ -1,10 +1,11 @@
+/* helio 26072023 OTIMIZAÇÃO DE CADASTRO DE CRÉDITO V6 . RESTRIÇÕES ADMCOM E IE */
+/* helio 13022023 - ID GLPI 156585 e 156556 Orquestra 456067 e 456058 */
+ 
 {admcab.i}
 
 def var  vpcarro  like carro.carsit.
 def var  vpclicod like clien.clicod.
-
 def var vdtcad-aux as date format "99/99/9999".
-
 def var vgera like clien.clicod.
 def var vcredito        as l format "Normal/Facil".
 def var reccont         as int.
@@ -20,14 +21,16 @@ def var esqcom1         as char format "x(12)" extent 6
 def var esqcom2         as char format "x(13)" extent 5
             initial [" Extrato "," Lista Novos","Consulta Vivo","",""].
 
-def var vopcao          as  char format "x(11)" extent 3
-                                    initial [" Por Codigo"," Por Nome ","Por Celular"] .
+def var vopcao          as  char format "x(11)" extent 4
+            initial [" Por Codigo"," Por Nome ","Por Celular","Por CPF"].
 def buffer bclien       for clien.
 def var vclicod         like clien.clicod.
 
 def temp-table ttclien like clien.
 
 def var cText0         like ttclien.clinom.
+
+def var vtipo_clien     as char.
 
 form esqcom1
      with frame f-com1
@@ -40,23 +43,25 @@ assign esqregua  = yes
        esqpos1   = 1
        esqpos2   = 1.
 
-bl-princ:
-repeat:
-
     form
         clien.clicod
         clien.clinom
-        clien.datexp format "99/99/9999"
+        clien.ciccgc format "x(11)"
+        clien.datexp format "99/99/99"
+        clien.idstatuscad format ">>9" column-label "Sta"
+        
         with frame frame-a 13 down centered color white/red.
 
+{segregua-6pos-regua1-5pos-regua2.i}
+
+bl-princ:
+repeat:
     disp esqcom1 with frame f-com1.
     disp esqcom2 with frame f-com2.
 
     if recatu1 = ?
-    then
-        find first clien where true use-index clien2 no-lock no-error.
-    else
-        find clien where recid(clien) = recatu1 no-lock no-error.
+    then find first clien where true use-index clien2 no-lock no-error.
+    else find clien where recid(clien) = recatu1 no-lock no-error.
 
     vinicio = no.
     
@@ -71,7 +76,8 @@ repeat:
             create ttclien.
             update ttclien.clicod
                    ttclien.clinom
-                   ttclien.tippes.
+                   ttclien.tippes
+                   ttclien.tipocod.
 
             find numcli where numcli.clicod = ttclien.clicod no-error.
             if avail numcli
@@ -90,7 +96,8 @@ repeat:
     display
         clien.clicod
         clien.clinom
-        clien.datexp
+        clien.ciccgc
+        clien.datexp clien.idstatuscad
             with frame frame-a.
 
     recatu1 = recid(clien).
@@ -98,8 +105,7 @@ repeat:
         esqcom1[esqpos1]
             with frame f-com1.
     repeat:
-        find next clien where
-                true use-index clien2 no-lock no-error.
+        find next clien where true use-index clien2 no-lock no-error.
         if not available clien
         then leave.
         if frame-line(frame-a) = frame-down(frame-a)
@@ -110,7 +116,8 @@ repeat:
         display
             clien.clicod
             clien.clinom
-            clien.datexp
+            clien.ciccgc
+            clien.datexp clien.idstatuscad
                 with frame frame-a.
     end.
     up frame-line(frame-a) - 1 with frame frame-a.
@@ -121,6 +128,7 @@ repeat:
 
         choose field clien.clicod 
                      clien.clinom
+                     clien.ciccgc
                      clien.datexp
                      go-on(cursor-down cursor-up 
                            cursor-left cursor-right 
@@ -236,8 +244,7 @@ repeat:
         end.
         if keyfunction(lastkey) = "cursor-up"
         then do:
-            find prev clien where
-                true use-index clien2 no-lock no-error.
+            find prev clien where true use-index clien2 no-lock no-error.
             if not avail clien
             then next.
             color display white/red
@@ -259,23 +266,26 @@ repeat:
                 with frame f-com1.
 
             if esqcom1[esqpos1] = "Inclusao"
-            then do transaction with frame f-inclui
+            then do  with frame f-inclui
                         row 4  centered OVERLAY 2 COLUMNS SIDE-LABELS.
                 
-                
-                create ttclien.
-                
+                do transaction:
                 find last cpfis no-error.
                 assign cpfis.clifor = cpfis.clifor + 1   
                        vgera = cpfis.clifor.
 
-                find last cpfis no-lock no-error.
-       
+                find current cpfis no-lock no-error.
+                end.
+
+                do transaction:
+                create ttclien.
                 ttclien.clicod = int(string(string(vgera,"999999") + "99")).
                 
                 update ttclien.clicod
                        ttclien.clinom
-                       ttclien.tippes with color white/cyan.
+                       ttclien.tippes
+                       ttclien.tipocod
+                        with color white/cyan.
                 
                 
                 assign cText0 = input ttclien.clinom.
@@ -287,21 +297,41 @@ repeat:
                 then
                     assign numcli.numsit = yes
                            numcli.datexp = today.
-                
                 run p-cria.
                 
                 run cliout9.p (input recid(clien)).
                 
                 recatu1 = recid(clien).
                 leave.
+                end.
             end.
             
             if esqcom1[esqpos1] = "Alteracao"
             then do transaction with frame f-altera
-                         row 5 centered OVERLAY 2 COLUMNS SIDE-LABELS.
+                         row 4 centered OVERLAY  SIDE-LABELS.
                 for each ttclien. delete ttclien. end.
                 find clien where recid(clien) = recatu1 NO-LOCK.
+                /* helio 26072023 */
+                   if avail clien
+                   then do:
+                        find clienstatus of clien no-lock no-error.
+                        if avail clienstatus
+                        then do:
+                            message clienstatus.BloqueioAlteracaoCadastral clienstatus.statusCadNome.
+
+                            if clienstatus.BloqueioAlteracaoCadastral
+                            then do:
+                                message "- Alteracao Cadastral Bloqueada -" skip caps(clienstatus.statusCadNome)
+                                    view-as alert-box.
+                                undo.
+                            end.    
+                        end.            
+                   end.
+                   /**/
+                create ttclien.
+                buffer-copy clien to ttclien.
                 
+                /*
                 find first titulo where titulo.clifor = clien.clicod and
                                        (titulo.titsit = "LIB" or
                                         titulo.titsit = "IMP") no-lock no-error.
@@ -311,15 +341,43 @@ repeat:
                 
                 create ttclien.
                 buffer-copy clien to ttclien.
+
+                find first tipo_clien
+                     where tipo_clien.tipocod = ttclien.tipocod
+                            no-lock no-error.
                 
-                display ttclien.clinom
-                        ttclien.tippes 
-                        vcredito label "Credito" with color white/cyan. pause 0.
+                display ttclien.clinom at 10 
+                        ttclien.tippes at 3 
+                        vcredito label "Credito" at 46
+                        ttclien.tipocod format ">9" label "Tipo Cliente" at 2
+                        tipo_clien.tipodes
+                        when avail tipo_clien no-label format "x(15)"
+                         with color white/cyan. pause 0.
 
-                update ttclien.clinom when not avail titulo
-                       ttclien.tippes 
-                       vcredito label "Credito" with color white/cyan.
+                /* helio 13022023 - ID GLPI 156585 e 156556 Orquestra 456067 e 456058 
+                *update ttclien.clinom when not avail titulo
+                       ttclien.tippes */
+                disp ttclien.clinom 
+                       ttclien.tippes
+                       vcredito label "Credito"
+                        with color white/cyan.
+                       
+                update ttclien.tipocod
+                  validate(can-find(first tipo_clien
+                                    where tipo_clien.tipocod = ttclien.tipocod),
+                                    "Tipo de Cliente nao encontrado")
+                                    with color white/cyan.
+                
+                /*
+                find first tipo_clien
+                     where tipo_clien.tipocod = ttclien.tipocod
+                                       no-lock no-error.
 
+                display tipo_clien.tipodes
+                            when avail tipo_clien no-label format "x(10)".
+                            pause 1.
+                */
+                
                 if vcredito = no
                 then ttclien.classe = 1.
                 else ttclien.classe = 0.
@@ -327,8 +385,25 @@ repeat:
                 find clien where recid(clien) = recatu1.
                 assign clien.clinom = ttclien.clinom
                        clien.tippes = ttclien.tippes
+                       clien.tipocod = ttclien.tipocod
                        clien.classe = ttclien.classe.
                 find clien where recid(clien) = recatu1 NO-LOCK.
+                */
+                find first tipo_clien
+                     where tipo_clien.tipocod = clien.tipocod
+                                       no-lock no-error.
+
+                display clien.clinom colon 15 format "x(60)"
+                        clien.nomeSocial colon 15 label "Nome Social"
+
+                        clien.tippes colon 15  clien.ultimaAtualizacaoCadastral label "Ult Atualizacao Cadastral"
+                        
+                        clien.tipocod  format ">9"  colon 15
+                        tipo_clien.tipodes
+                             when avail tipo_clien no-label format "x(15)"
+                         with color white/cyan 
+                         title "Cliente " + string(clien.clicod). 
+                pause 0.
                         
                 run cliout9.p (input recid(clien)) .
               
@@ -339,20 +414,49 @@ repeat:
 
             if esqcom1[esqpos1] = "Consulta"
             then do with frame f-consulta
-                        row 5  centered OVERLAY 2 COLUMNS SIDE-LABELS.
+                        row 4  centered OVERLAY SIDE-LABELS .
 
+                find first tipo_clien
+                     where tipo_clien.tipocod = clien.tipocod
+                                       no-lock no-error.
+
+                display clien.clinom colon 15 format "x(60)"
                 
-                display clien.clinom
-                        clien.tippes with color white/cyan.
-                pause.
+                        clien.nomeSocial colon 15 label "Nome Social"
 
+                        clien.tippes colon 15  clien.ultimaAtualizacaoCadastral label "Ult Atualizacao Cadastral"
+                        
+                        clien.tipocod  format ">9"  colon 15
+                        tipo_clien.tipodes
+                             when avail tipo_clien no-label format "x(15)"
+                         with color white/cyan 
+                         title "Cliente " + string(clien.clicod). 
+                pause 0.
 
-                run clidis.p (input recid(clien)) .         
+                run clidis.p (input recid(clien)).         
             end.
 
             if esqcom1[esqpos1] = "Exclusao"
             then do transaction with frame f-exclui
                         row 4  centered OVERLAY 2 COLUMNS SIDE-LABELS.
+                /* helio 26072023 */
+                   if avail clien
+                   then do:
+                        find clienstatus of clien no-lock no-error.
+                        if avail clienstatus
+                        then do:
+                            message clienstatus.BloqueioAlteracaoCadastral clienstatus.statusCadNome.
+
+                            if clienstatus.BloqueioAlteracaoCadastral
+                            then do:
+                                message "- Alteracao Cadastral Bloqueada -" skip caps(clienstatus.statusCadNome)
+                                    view-as alert-box.
+                                undo.
+                            end.    
+                        end.            
+                   end.
+                   /**/
+
                 find first titulo where titulo.clifor = clien.clicod 
                                 no-lock no-error.
                 if avail titulo
@@ -362,6 +466,7 @@ repeat:
                        "Cliente com contratos . Exclusao nao permitida".
                     leave.
                 end.
+
 
                 {segur.i 1}
                 message "Confirma Exclusao de" clien.clinom update sresp.
@@ -407,7 +512,8 @@ repeat:
                     recatu1 = recid(bclien).
                     leave.
                 end.
-                if frame-index = 2 then do with frame fescolha1 side-label
+                if frame-index = 2
+                then do with frame fescolha1 side-label
                         column 30 row 9 overlay color white/cyan .
                    prompt-for bclien.clinom.
                    find first bclien where 
@@ -418,14 +524,26 @@ repeat:
                    recatu1 = recid(bclien).
                    leave.
                 end.
-                if frame-index = 3 then do with frame fescolha2 side-label
+                if frame-index = 3
+                then do with frame fescolha2 side-label
                         column 20 row 9 overlay color white/cyan .
                    /* Celular */
-                   prompt-for bclien.fax format "(xx) xxxxxxxx".
-                   find first bclien 
-                     where bclien.fax = input bclien.fax
+                   prompt-for bclien.fax format "(xx) xxxxxxxxx".
+                   find first bclien where bclien.fax = input bclien.fax
                        /* use-index clien2 - nao tem indice */
                        no-lock no-error.
+                   if not avail bclien
+                   then leave.
+                   recatu1 = recid(bclien).
+                   leave.
+                end.
+                if frame-index = 4
+                then do with frame fescolha4 side-label
+                        column 30 row 9 overlay color white/cyan.
+                   prompt-for bclien.ciccgc.
+                   find first bclien where bclien.ciccgc = input bclien.ciccgc
+                                     no-lock no-error.
+                   hide frame fescolha4 no-pause.
                    if not avail bclien
                    then leave.
                    recatu1 = recid(bclien).
@@ -434,18 +552,16 @@ repeat:
             end.
             if esqcom1[esqpos1] = "E-Commerce"
             then do:
-                
                 message "Conectando ao banco ECommerce...".
                 if connected ("ecommerce")
                 then disconnect ecommerce.
                 
-                connect ecommerce -H "database" -S sdrebecommerce -N tcp -ld                                                     ecommerce no-error.
+                connect ecommerce -H "erp.lebes.com.br" -S sdrebecommerce -N tcp -ld                                                     ecommerce no-error.
                 pause 0.
                 run cliecom.p (input rowid(clien)).
                 
                 if connected ("ecommerce")
                 then disconnect ecommerce.
-                
             end.
           end.
           else do:
@@ -457,14 +573,14 @@ repeat:
             then do with frame f-consulta-vivo
                         row 5  centered OVERLAY 2 COLUMNS SIDE-LABELS.
 
-
                 update vdtcad-aux label "Data de Cadastro"
                        with frame f-data centered side-labels 
                             color white/red overlay row 10.
                 hide frame f-data no-pause.
                 
                 display clien.clinom
-                        clien.tippes with color white/cyan.
+                        clien.tippes
+                           with color white/cyan.
                 pause.
                 
                 run clidisv.p (input recid(clien), input vdtcad-aux) .
@@ -497,7 +613,8 @@ repeat:
         display
                 clien.clicod
                 clien.clinom
-                clien.datexp
+                clien.ciccgc
+                clien.datexp clien.idstatuscad
                     with frame frame-a.
         if esqregua
         then display esqcom1[esqpos1] with frame f-com1.
