@@ -804,7 +804,7 @@ for each acoplanos where acoplanos.negcod = par-negcod
         ttparcelas.placod = ttcondicoes.placod.
 
         /* helio 27042023 - fixo today + 3, cuidando se for final de semana */
-        ttparcelas.dtven  = today + 3. 
+        ttparcelas.dtven  = today +  7. /*Helio 27/05/2024 */ 
         if weekday(ttparcelas.dtven) = 7 /* sabado */ 
         then ttparcelas.dtven = ttparcelas.dtven + 2.
         if weekday(ttparcelas.dtven) = 1 /* domingo */ 
