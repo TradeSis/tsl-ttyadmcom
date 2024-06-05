@@ -1,7 +1,12 @@
-/* medico na tela 042022 - helio */
-{admcab.i }
-def buffer bmedprodu for medprodu.
+/*               to                   sfpl
+*                                 R
+*
+*/
 
+{admcab.i}
+
+def input param par-rec as recid. 
+def buffer blimestab for limestab.
     
 def var xtime as int.
 def var vconta as int.
@@ -12,7 +17,7 @@ def var recatu2     as reci.
 def var reccont         as int.
 def var esqpos1         as int.
 def var esqcom1         as char format "x(11)" extent 6
-    initial [" parametros "," planos" , " inclusao "," exclusao"," -"].
+    initial [" inclusao"," exclusao  ","-"," "].
 
 
 form
@@ -22,14 +27,15 @@ form
 assign
     esqpos1  = 1.
 
-    form  
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepasseMes label "Repasse Mes"
-      medprodu.idPerfil
 
-       with frame frame-a 8 down centered row 8.
+find limarea where recid(limarea) = par-rec no-lock.
+
+    form  
+        
+        limestab.etbcod
+        
+        with frame frame-a 8 down centered row 8
+            title limarea.lianom.
 
 
 bl-princ:
@@ -39,11 +45,12 @@ repeat:
     disp esqcom1 with frame f-com1.
     if recatu1 = ?
     then run leitura (input "pri").
-    else find medprodu where recid(medprodu) = recatu1 no-lock.
-    if not available medprodu
+    else find limestab where recid(limestab) = recatu1 no-lock.
+    if not available limestab
     then do.
+        hide frame frame-a no-pause.
+        message "sem nenhuma filial definida, a AREA vale para todas as filiais".
         run pinclui (output recatu1).
-        run pparametros.
         if recatu1 = ? then return.
         next.
         
@@ -51,11 +58,11 @@ repeat:
     clear frame frame-a all no-pause.
     run frame-a.
 
-    recatu1 = recid(medprodu).
+    recatu1 = recid(limestab).
     color display message esqcom1[esqpos1] with frame f-com1.
     repeat:
         run leitura (input "seg").
-        if not available medprodu
+        if not available limestab
         then leave.
         if frame-line(frame-a) = frame-down(frame-a)
         then leave.
@@ -66,19 +73,17 @@ repeat:
 
     repeat with frame frame-a:
 
-        find medprodu where recid(medprodu) = recatu1 no-lock.
+        find limestab where recid(limestab) = recatu1 no-lock.
 
         status default "".
         
-        if false
-        then esqcom1[5] = " exclusao".
-        else esqcom1[5] = "".
+                        
         
         disp esqcom1 with frame f-com1.
         
         run color-message.
             
-        choose field medprodu.idmedico
+        choose field limestab.etbcod
 
                 go-on(cursor-down cursor-up
                       cursor-left cursor-right
@@ -110,9 +115,9 @@ repeat:
             then do:
                 do reccont = 1 to frame-down(frame-a):
                     run leitura (input "down").
-                    if not avail medprodu
+                    if not avail limestab
                     then leave.
-                    recatu1 = recid(medprodu).
+                    recatu1 = recid(limestab).
                 end.
                 leave.
             end.
@@ -120,16 +125,16 @@ repeat:
             then do:
                 do reccont = 1 to frame-down(frame-a):
                     run leitura (input "up").
-                    if not avail medprodu
+                    if not avail limestab
                     then leave.
-                    recatu1 = recid(medprodu).
+                    recatu1 = recid(limestab).
                 end.
                 leave.
             end.
             if keyfunction(lastkey) = "cursor-down"
             then do:
                 run leitura (input "down").
-                if not avail medprodu
+                if not avail limestab
                 then next.
                 if frame-line(frame-a) = frame-down(frame-a)
                 then scroll with frame frame-a.
@@ -138,7 +143,7 @@ repeat:
             if keyfunction(lastkey) = "cursor-up"
             then do:
                 run leitura (input "up").
-                if not avail medprodu
+                if not avail limestab
                 then next.
                 if frame-line(frame-a) = 1
                 then scroll down with frame frame-a.
@@ -153,42 +158,25 @@ repeat:
         then do:
             
 
-            if esqcom1[esqpos1] = " parametros "
+            if esqcom1[esqpos1] = " exclusao "
             then do:
-                hide frame f-com1 no-pause.
-
-                run pparametros.    
+                run pexclui.    
+                recatu1 = ?.
                 leave.
             end.
             if esqcom1[esqpos1] = " inclusao "
             then do:
                 hide frame f-com1 no-pause.
                 run pinclui (output recatu1).
-                run pparametros.
                 leave.
                 
             end. 
-            if esqcom1[esqpos1] = " exclusao "
-            then do:
-                run color-message.
-
-                run pexclui.
-                recatu1 = ?.
-                leave.
-            end. 
-            if esqcom1[esqpos1] = " planos "
-            then do:
-            
-                run med/medplan.p (input medprodu.procod).
-            
-            end.        
-            
             
              
         end.
         run frame-a.
         display esqcom1[esqpos1] with frame f-com1.
-        recatu1 = recid(medprodu).
+        recatu1 = recid(limestab).
     end.
     if keyfunction(lastkey) = "end-error"
     then do:
@@ -200,15 +188,10 @@ hide frame f-com1  no-pause.
 hide frame frame-a no-pause.
 
 procedure frame-a.
-    find produ of medprodu no-lock no-error.
-    
+    find estab where estab.etbcod = limestab.etbcod no-lock.
     display  
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-      medprodu.idPerfil
-
+        limestab.etbcod
+        estab.etbnom
         with frame frame-a.
 
 
@@ -216,38 +199,21 @@ end procedure.
 
 procedure color-message.
     color display message
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-
-      medprodu.idPerfil
-
+        limestab.etbcod
         with frame frame-a.
 end procedure.
 
 
 procedure color-input.
     color display input
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-
-      medprodu.idPerfil
-
+        limestab.etbcod
         with frame frame-a.
 end procedure.
 
 
 procedure color-normal.
     color display normal
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-
-      medprodu.idPerfil
+        limestab.etbcod
 
         with frame frame-a.
 end procedure.
@@ -257,20 +223,20 @@ def input parameter par-tipo as char.
         
 if par-tipo = "pri" 
 then do:
-        find first medprodu  
+        find first limestab  of limarea
                 no-lock no-error.
 end.    
                                              
 if par-tipo = "seg" or par-tipo = "down" 
 then do:
-        find next medprodu  
+        find next limestab  of limarea
                 no-lock no-error.
 
 end.    
              
 if par-tipo = "up" 
 then do:
-        find prev medprodu  
+        find prev limestab of limarea
                 no-lock no-error.
 
 end.    
@@ -279,38 +245,12 @@ end procedure.
 
 
 
-procedure pparametros.
+procedure pexclui.
 
-    do on error undo
-     with 1 col
-                 row 8
-                             centered
-                                            overlay.
-                                            
+    do on error undo:
 
-        find current medprodu exclusive.
-        
-        update medprodu.idmedico.
-        
-        update  medprodu.valorServico.
-        disp medprodu.valorServico.
-        if medprodu.valorServico = ?
-                then do:
-                    message "Escolha Preco".
-                    undo.
-                end.    
-
-        update  medprodu.valorRepassemes.
-        disp medprodu.valorrepassemes.
-        if medprodu.valorrepassemes = ?
-                then do:
-                    message "Escolha valor do repasse mes".
-                    undo.
-                end.    
-                
-        medprodu.idPerfil = 1 /* versao 0 sem tela de ajuste */ .
-        disp medprodu.idPerfil.
-
+        find current limestab exclusive.
+        delete limestab.
     end.
 
 end.
@@ -320,42 +260,27 @@ procedure pinclui.
 def output param prec as recid.
 do on error undo.
 
-    find last bmedprodu no-lock no-error.
-    create medprodu.
-    medprodu.idPerfil = 1 /* versao 0 sem tela de ajuste */ .
-
-    prec = recid(medprodu).
+    find last blimestab no-lock no-error.
+    create limestab.
+    prec = recid(limestab).
+    limestab.liacod = limarea.liacod.
     
     update
-        medprodu.procod
-        medprodu.idmedico
+        limestab.etbcod
         with row 9 
         centered
-        overlay 1 column.
+        overlay.
 
-        find produ where produ.procod = medprodu.procod no-lock no-error.
-        if not avail produ        
-        then do:
-            message "produto nao cadastrado".
-            undo.
-        end.    
-    
-
-
+    find estab where estab.etbcod = limestab.etbcod no-lock no-error.
+    if not avail estab
+    then do:
+        message "filial nao cadastrada".
+        pause.
+        undo.
+    end.
 end.
 
 
 end procedure.
 
 
-
-procedure pexclui.
-sresp = yes.
-message color normal "confirma?" update sresp.
-if sresp
-then do on error undo:
-    find current medprodu exclusive no-wait no-error.
-    if avail medprodu
-    then delete medprodu.
-end.
-end procedure.

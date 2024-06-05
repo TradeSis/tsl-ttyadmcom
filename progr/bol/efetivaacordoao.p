@@ -87,9 +87,12 @@ then do:
     find first aoacorigem of aoacordo /* #2 */ NO-LOCK no-error.
     find ocontrato of aoacorigem no-lock.
     vetbcod = ocontrato.etbcod.
-    if ocontrato.modcod begins "CP" 
-    then vmodcod = "CPN".
-    else vmodcod = ocontrato.modcod.
+    /* helio 05062024 -  refin nova modalidade
+    *if ocontrato.modcod begins "CP" 
+    *then vmodcod = "CPN".
+    *else vmodcod = ocontrato.modcod.
+    */
+    vmodcod = "RFN".
 
     do on error undo:
         create contrato.

@@ -1,7 +1,10 @@
-/* medico na tela 042022 - helio */
-{admcab.i }
-def buffer bmedprodu for medprodu.
+/*               to                   sfpl
+*                                 R
+*
+*/
 
+{admcab.i}
+def buffer bestboleto for estboleto.
     
 def var xtime as int.
 def var vconta as int.
@@ -12,7 +15,7 @@ def var recatu2     as reci.
 def var reccont         as int.
 def var esqpos1         as int.
 def var esqcom1         as char format "x(11)" extent 6
-    initial [" parametros "," planos" , " inclusao "," exclusao"," -"].
+    initial [" parametros "," inclusao "," exclusao"," -"].
 
 
 form
@@ -22,14 +25,18 @@ form
 assign
     esqpos1  = 1.
 
-    form  
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepasseMes label "Repasse Mes"
-      medprodu.idPerfil
 
-       with frame frame-a 8 down centered row 8.
+    form  
+        
+        estboleto.etbcod column-label "fil" 
+        estab.etbnom     format "x(12)" no-label
+        estboleto.lojaaberta
+        estboleto.vlrtaxa
+        estboleto.fatjuros
+        
+        
+        with frame frame-a 8 down centered row 8
+        no-box.
 
 
 bl-princ:
@@ -39,11 +46,10 @@ repeat:
     disp esqcom1 with frame f-com1.
     if recatu1 = ?
     then run leitura (input "pri").
-    else find medprodu where recid(medprodu) = recatu1 no-lock.
-    if not available medprodu
+    else find estboleto where recid(estboleto) = recatu1 no-lock.
+    if not available estboleto
     then do.
         run pinclui (output recatu1).
-        run pparametros.
         if recatu1 = ? then return.
         next.
         
@@ -51,11 +57,11 @@ repeat:
     clear frame frame-a all no-pause.
     run frame-a.
 
-    recatu1 = recid(medprodu).
+    recatu1 = recid(estboleto).
     color display message esqcom1[esqpos1] with frame f-com1.
     repeat:
         run leitura (input "seg").
-        if not available medprodu
+        if not available estboleto
         then leave.
         if frame-line(frame-a) = frame-down(frame-a)
         then leave.
@@ -66,19 +72,15 @@ repeat:
 
     repeat with frame frame-a:
 
-        find medprodu where recid(medprodu) = recatu1 no-lock.
+        find estboleto where recid(estboleto) = recatu1 no-lock.
 
         status default "".
-        
-        if false
-        then esqcom1[5] = " exclusao".
-        else esqcom1[5] = "".
         
         disp esqcom1 with frame f-com1.
         
         run color-message.
             
-        choose field medprodu.idmedico
+        choose field estboleto.etbcod
 
                 go-on(cursor-down cursor-up
                       cursor-left cursor-right
@@ -110,9 +112,9 @@ repeat:
             then do:
                 do reccont = 1 to frame-down(frame-a):
                     run leitura (input "down").
-                    if not avail medprodu
+                    if not avail estboleto
                     then leave.
-                    recatu1 = recid(medprodu).
+                    recatu1 = recid(estboleto).
                 end.
                 leave.
             end.
@@ -120,16 +122,16 @@ repeat:
             then do:
                 do reccont = 1 to frame-down(frame-a):
                     run leitura (input "up").
-                    if not avail medprodu
+                    if not avail estboleto
                     then leave.
-                    recatu1 = recid(medprodu).
+                    recatu1 = recid(estboleto).
                 end.
                 leave.
             end.
             if keyfunction(lastkey) = "cursor-down"
             then do:
                 run leitura (input "down").
-                if not avail medprodu
+                if not avail estboleto
                 then next.
                 if frame-line(frame-a) = frame-down(frame-a)
                 then scroll with frame frame-a.
@@ -138,7 +140,7 @@ repeat:
             if keyfunction(lastkey) = "cursor-up"
             then do:
                 run leitura (input "up").
-                if not avail medprodu
+                if not avail estboleto
                 then next.
                 if frame-line(frame-a) = 1
                 then scroll down with frame frame-a.
@@ -164,7 +166,6 @@ repeat:
             then do:
                 hide frame f-com1 no-pause.
                 run pinclui (output recatu1).
-                run pparametros.
                 leave.
                 
             end. 
@@ -176,19 +177,30 @@ repeat:
                 recatu1 = ?.
                 leave.
             end. 
+            
+            
             if esqcom1[esqpos1] = " planos "
             then do:
+                hide frame f-com1 no-pause.
+                hide frame frame-a no-pause.
+                run fin/novplano.p (recid(estboleto)).
+                
+            end. 
+            if esqcom1[esqpos1] = " filiais "
+            then do:
+                hide frame f-com1 no-pause.
+                hide frame frame-a no-pause.
+                run fin/novestab.p (recid(estboleto)).
+                
+            end. 
             
-                run med/medplan.p (input medprodu.procod).
-            
-            end.        
             
             
              
         end.
         run frame-a.
         display esqcom1[esqpos1] with frame f-com1.
-        recatu1 = recid(medprodu).
+        recatu1 = recid(estboleto).
     end.
     if keyfunction(lastkey) = "end-error"
     then do:
@@ -200,15 +212,13 @@ hide frame f-com1  no-pause.
 hide frame frame-a no-pause.
 
 procedure frame-a.
-    find produ of medprodu no-lock no-error.
-    
+    find estab of estboleto no-lock no-error. 
     display  
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-      medprodu.idPerfil
-
+        estboleto.etbcod
+        estab.etbnom when avail estab
+        estboleto.lojaaberta
+        estboleto.vlrtaxa
+        estboleto.fatjuros
         with frame frame-a.
 
 
@@ -216,12 +226,11 @@ end procedure.
 
 procedure color-message.
     color display message
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-
-      medprodu.idPerfil
+        estboleto.etbcod
+        estab.etbnom
+        estboleto.lojaaberta
+        estboleto.vlrtaxa
+        estboleto.fatjuros
 
         with frame frame-a.
 end procedure.
@@ -229,26 +238,26 @@ end procedure.
 
 procedure color-input.
     color display input
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-
-      medprodu.idPerfil
-
+        estboleto.etbcod
+        estab.etbnom
+        
+        estboleto.lojaaberta
+        estboleto.vlrtaxa
+        estboleto.fatjuros
+        
         with frame frame-a.
 end procedure.
 
 
 procedure color-normal.
     color display normal
-      medprodu.procod
-      medprodu.idmedico
-      
-      medprodu.valorServico medprodu.valorRepassemes
-
-      medprodu.idPerfil
-
+        estboleto.etbcod
+        estab.etbnom
+        
+        estboleto.lojaaberta
+        estboleto.vlrtaxa
+        estboleto.fatjuros
+        
         with frame frame-a.
 end procedure.
 
@@ -257,20 +266,20 @@ def input parameter par-tipo as char.
         
 if par-tipo = "pri" 
 then do:
-        find first medprodu  
+        find first estboleto  where
                 no-lock no-error.
 end.    
                                              
 if par-tipo = "seg" or par-tipo = "down" 
 then do:
-        find next medprodu  
+        find next estboleto  where
                 no-lock no-error.
 
 end.    
              
 if par-tipo = "up" 
 then do:
-        find prev medprodu  
+        find prev estboleto  where
                 no-lock no-error.
 
 end.    
@@ -281,35 +290,20 @@ end procedure.
 
 procedure pparametros.
 
-    do on error undo
-     with 1 col
-                 row 8
-                             centered
-                                            overlay.
-                                            
+    do on error undo:
 
-        find current medprodu exclusive.
-        
-        update medprodu.idmedico.
-        
-        update  medprodu.valorServico.
-        disp medprodu.valorServico.
-        if medprodu.valorServico = ?
-                then do:
-                    message "Escolha Preco".
-                    undo.
-                end.    
-
-        update  medprodu.valorRepassemes.
-        disp medprodu.valorrepassemes.
-        if medprodu.valorrepassemes = ?
-                then do:
-                    message "Escolha valor do repasse mes".
-                    undo.
-                end.    
-                
-        medprodu.idPerfil = 1 /* versao 0 sem tela de ajuste */ .
-        disp medprodu.idPerfil.
+        find current estboleto exclusive.
+        disp estboleto.etbcod.
+        disp    
+            estboleto  
+                   with row 9 
+        centered
+        overlay 1 column.
+.
+                    
+        update
+            estboleto
+                except etbcod.
 
     end.
 
@@ -320,26 +314,18 @@ procedure pinclui.
 def output param prec as recid.
 do on error undo.
 
-    find last bmedprodu no-lock no-error.
-    create medprodu.
-    medprodu.idPerfil = 1 /* versao 0 sem tela de ajuste */ .
-
-    prec = recid(medprodu).
+    find last bestboleto no-lock no-error.
+    create estboleto.
+    prec = recid(estboleto).
     
     update
-        medprodu.procod
-        medprodu.idmedico
+        estboleto.etbcod
         with row 9 
         centered
         overlay 1 column.
-
-        find produ where produ.procod = medprodu.procod no-lock no-error.
-        if not avail produ        
-        then do:
-            message "produto nao cadastrado".
-            undo.
-        end.    
-    
+        update
+            estboleto
+                except etbcod.
 
 
 end.
@@ -354,8 +340,10 @@ sresp = yes.
 message color normal "confirma?" update sresp.
 if sresp
 then do on error undo:
-    find current medprodu exclusive no-wait no-error.
-    if avail medprodu
-    then delete medprodu.
+    find current estboleto exclusive no-wait no-error.
+    if avail estboleto
+    then do:
+        delete estboleto.    
+    end.        
 end.
 end procedure.

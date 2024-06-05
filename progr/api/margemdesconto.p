@@ -22,7 +22,7 @@ vsaida  = "/ws/works/margemdesconto" + string(today,"999999") + replace(string(t
 
 output to value(vsaida + ".sh").
 put unformatted
-    "curl -X POST -s \"http://172.19.130.175:5555/gateway/pdvRestAPI/1.0/consultaMargemDescontoRestResource" + "\" " +
+    "curl -X POST -s \"http://172.19.130.11:5555/gateway/pdvRestAPI/1.0/consultaMargemDescontoRestResource" + "\" " +
     " -H \"Content-Type: application/json\" " +
     " -d '" + string(vLCEntrada) + "' " + 
     " -o "  + vsaida.
