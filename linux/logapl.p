@@ -160,7 +160,6 @@ def var v-down           as int.
     for each aplicativo where aplicativo.ativo NO-LOCK:
         v-down = v-down + 1.
     end.
-/**
 
 if not connected("suporte")
 then do.
@@ -168,8 +167,6 @@ then do.
         pause 4 no-message.
     quit.
 end.
-**/
-
             /*
 if sfuncod = 1101 or  /* CLAUDIR */
    sfuncod = 65 or   /* JOÃO */
