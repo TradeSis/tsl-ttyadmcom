@@ -1,4 +1,3 @@
-/* helio 14032022 - Ajuste Boletos em QA - EM QA nao chama a api, pois na caixa não esta funcionando, e faz fake o registro */
 /* helio 20/05/2021 Boleto Caixa */
 /*VERSAO 1*/
 def input param par-recid-banboleto as recid.
@@ -6,19 +5,6 @@ def output param vstatus as char.
 def output param vmensagem as char.
 
 vstatus = "N".
-
-/* helio 14032022 - Ajuste Boletos em QA */
-def var vhostname as char.
-input through hostname.
-import vhostname.
-input close. 
-if vhostname = "SV-CA-DB-DEV" or 
-   vhostname = "SV-CA-DB-QA"
-then do: 
-    vstatus = "S".  
-    vmensagem = "". 
-    return.
-end.    /* helio 14032022 - Ajuste Boletos em QA */
 
 def var vlcentrada as longchar.
 def var vlcsaida as longchar.
