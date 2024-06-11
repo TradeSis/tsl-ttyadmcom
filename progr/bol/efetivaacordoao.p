@@ -87,9 +87,12 @@ then do:
     find first aoacorigem of aoacordo /* #2 */ NO-LOCK no-error.
     find ocontrato of aoacorigem no-lock.
     vetbcod = ocontrato.etbcod.
-    if ocontrato.modcod begins "CP" 
-    then vmodcod = "CPN".
-    else vmodcod = ocontrato.modcod.
+    /* helio 05062024 -  refin nova modalidade
+    *if ocontrato.modcod begins "CP" 
+    *then vmodcod = "CPN".
+    *else vmodcod = ocontrato.modcod.
+    */
+    vmodcod = "RFN".
 
     do on error undo:
         create contrato.
@@ -203,20 +206,25 @@ then do:
         
     end.    
 
-    /* helio 122022 - onda 3 */ 
-    /*
-        if contrato.crecod = 500
-        then do: 
-            find first findepara where  
-                    findepara.prazo      = vqtdParcelas and 
-                    findepara.comentrada = (vvlentra > 0) and 
-                    findepara.comjuros   = (vvalorAcrescimo > 0)
-                    no-lock no-error. 
-            if avail findepara 
-            then contrato.crecod = findepara.fincod. 
-        end.     
-        */
-    /* onda 3 */
+     /* helio 122022 - onda 3 */ 
+     if contrato.crecod = 500
+     then do: 
+                     /* depara */
+                     find last findepara where 
+                             findepara.prazo      = vqtdparcelas and
+                             findepara.comentrada = yes and
+                             (
+                             if vvalorAcrescimo > 0
+                             then  (findepara.taxa_juros <=  100 and findepara.taxa_juros > 0)
+                             else  (findepara.taxa_juros = 0)
+                             )
+                         no-lock no-error.
+                     if avail findepara
+                     then do:
+                         contrato.crecod = findepara.fincod. 
+                     end.
+     end.
+ /* onda 3 */ 
     
             /**/
     run api/verificacarteira.p (input "CSLOG", 

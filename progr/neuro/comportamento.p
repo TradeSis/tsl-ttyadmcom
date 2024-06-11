@@ -376,12 +376,13 @@ var-propriedades =
             
             if tp-titulo.titpar <> 0
             then do:    
-                if tp-titulo.tpcontrato = "N" 
+                if tp-titulo.tpcontrato = "N"
                 then do:
                     var-contrato_novacao = yes. 
                     var-totalnov = var-totalnov + tp-titulo.titvlcob.
                     /*  helio 15082023 */
-                    assign var-DTULTNOV = if var-DTULTNOV = ?
+                    if tp-titulo.modcod <> "RFN" /* helio 05062024 - refin rfn */
+                    then assign var-DTULTNOV = if var-DTULTNOV = ?
                                       then tp-titulo.titdtemi
                                       else max(var-DTULTNOV,tp-titulo.titdtemi).
                 end.       
@@ -405,7 +406,8 @@ var-propriedades =
                 
                     if var-contrato_novacao
                     then do:
-                        var-saldototnov = var-saldototnov + tp-titulo.titvlcob.
+                        if tp-titulo.modcod <> "RFN"
+                        then var-saldototnov = var-saldototnov + tp-titulo.titvlcob.
                         if tp-titulo.titdtven < today
                         then do:
                             var-saldovencnov = var-saldovencnov + 
@@ -555,7 +557,8 @@ var-propriedades =
             if last-of(tp-titulo.titnum)
             then do:
                 var-qtdecont = var-qtdecont + 1.
-                if var-contrato_novacao
+                if var-contrato_novacao and
+                   tp-titulo.modcod <> "RFN" /* helio 05062024 - refin rfn */
                 then var-qtdenov = var-qtdenov + 1. 
                 var-maiorcont = max(var-maiorcont,var-vlrcontrato).
                 if var-vlrcontrato < 100
