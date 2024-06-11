@@ -1,11 +1,12 @@
-/* helio 17022022 263458 - Revisão da regra de novações */
-/* #H1 helio.neto 30072021 - ajustou a moecod, para a mesma regra de outras, que é pelo tipo de baixa */
+
+/* helio 17022022 263458 - RevisÃ£o da regra de novaÃ§Ãµes */
+/* #H1 helio.neto 30072021 - ajustou a moecod, para a mesma regra de outras, que Ã© pelo tipo de baixa */
 
 /* Gestao de Boletos   - rotinas
    bol/efetivaacordo_v2101.p
    Efetiva acordo criando Contrato/Titulos e Baixando TitulosOriginais 
 #1 22.02.2018 Helio - Corretiva TP 22125274 - Acerto para baixar titulo origem
-   pelo valor do titulo, e nao o do parametro que é o valor da entrada do acordo
+   pelo valor do titulo, e nao o do parametro que Ã© o valor da entrada do acordo
 #2 TP 28872041 16.01.19 - Etbcod e modcod na origem
 */
 
@@ -87,9 +88,12 @@ then do:
     find first aoacorigem of aoacordo /* #2 */ NO-LOCK no-error.
     find ocontrato of aoacorigem no-lock.
     vetbcod = ocontrato.etbcod.
-    if ocontrato.modcod begins "CP" 
-    then vmodcod = "CPN".
-    else vmodcod = ocontrato.modcod.
+    /* helio 05062024 -  refin nova modalidade
+    *if ocontrato.modcod begins "CP" 
+    *then vmodcod = "CPN".
+    *else vmodcod = ocontrato.modcod.
+    */
+    vmodcod = "RFN".
 
     do on error undo:
         create contrato.
@@ -106,7 +110,7 @@ then do:
                              then 13 else 10
             contrato.tpcontrato = "N".
 
-        /* helio 25.11.2021 ID 98001 - Novações cslog fora da estrutura padrão para origem e novo.
+        /* helio 25.11.2021 ID 98001 - NovaÃ§Ãµes cslog fora da estrutura padrÃ£o para origem e novo.
                 criando forma e pdvmoeda */
             find first pdvforma where      
                      pdvforma.etbcod     = pdvmov.etbcod and
@@ -146,12 +150,12 @@ then do:
             pdvforma.qtd_parcelas = contrato.nro_parcela.
             pdvforma.valor_ACF    = contrato.vlf_Acrescimo.
             pdvforma.valor        = contrato.vlTotal.
-        /* helio 25.11.2021 ID 98001 - Novações cslog fora da estrutura padrão para origem e novo.
+        /* helio 25.11.2021 ID 98001 - NovaÃ§Ãµes cslog fora da estrutura padrÃ£o para origem e novo.
                 criando forma e pdvmoeda */
 
     end.                                                    
 
-    /* helio 17022022 263458 - Revisão da regra de novações */
+    /* helio 17022022 263458 - RevisÃ£o da regra de novaÃ§Ãµes */
     def var vtitvlori as dec.
     def var vvalorparcela as dec.
     def var vqtdparcelas as int.
@@ -203,25 +207,26 @@ then do:
         
     end.    
 
-   /* helio 122022 - onda 3 */ 
-        if contrato.crecod = 500
-        then do: 
-                        /* depara */
-                        find last findepara where 
-                                findepara.prazo      = vqtdparcelas and
-                                findepara.comentrada = yes and
-                                (
-                                if vvalorAcrescimo > 0
-                                then  (findepara.taxa_juros <=  100 and findepara.taxa_juros > 0)
-                                else  (findepara.taxa_juros = 0)
-                                )
-                            no-lock no-error.
-                        if avail findepara
-                        then do:
-                            contrato.crecod = findepara.fincod. 
-                        end.
-        end.
-    /* onda 3 */ 
+     /* helio 122022 - onda 3 */ 
+     if contrato.crecod = 500
+     then do: 
+                     /* depara */
+                     find last findepara where 
+                             findepara.prazo      = vqtdparcelas and
+                             findepara.comentrada = yes and
+                             (
+                             if vvalorAcrescimo > 0
+                             then  (findepara.taxa_juros <=  100 and findepara.taxa_juros > 0)
+                             else  (findepara.taxa_juros = 0)
+                             )
+                         no-lock no-error.
+                     if avail findepara
+                     then do:
+                         contrato.crecod = findepara.fincod. 
+                     end.
+     end.
+ /* onda 3 */ 
+    
             /**/
     run api/verificacarteira.p (input "CSLOG", 
                                 input vvalorParcela, 
@@ -271,7 +276,7 @@ then do:
             titulo.titvlcob   = aoacparcela.vlCobrado.
 
 
-        /* helio 25.11.2021 ID 98001 - Novações cslog fora da estrutura padrão para origem e novo.
+        /* helio 25.11.2021 ID 98001 - NovaÃ§Ãµes cslog fora da estrutura padrÃ£o para origem e novo.
                 criando forma e pdvmoeda */.
                 find first pdvmoeda where      
                      pdvmoeda.etbcod       = pdvmov.etbcod and
@@ -308,7 +313,7 @@ then do:
 
                 pdvmoeda.valor = titulo.titvlcob.
                 pdvmoeda.titdtven = titulo.titdtven.
-        /* helio 25.11.2021 ID 98001 - Novações cslog fora da estrutura padrão para origem e novo.
+        /* helio 25.11.2021 ID 98001 - NovaÃ§Ãµes cslog fora da estrutura padrÃ£o para origem e novo.
                 criando forma e pdvmoeda */.
         
         assign
@@ -368,7 +373,7 @@ then do:
             else aoacparcela.Situacao = "E".
             
             
-            /* helio 17022022 263458 - Revisão da regra de novações */
+            /* helio 17022022 263458 - RevisÃ£o da regra de novaÃ§Ãµes */
             
             titulo.cobcod = pcobcod. 
             titulo.vlf_acrescimo  = contrato.vlf_acrescimo / contrato.nro_parcela.
@@ -500,5 +505,4 @@ then do:
         par-ok = yes.
     end.
 end.
-
 
