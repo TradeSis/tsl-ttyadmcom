@@ -200,7 +200,7 @@ hide frame f-com1  no-pause.
 hide frame frame-a no-pause.
 
 procedure frame-a.
-    find produ of medprodu no-lock.
+    find produ of medprodu no-lock no-error.
     
     display  
       medprodu.procod
