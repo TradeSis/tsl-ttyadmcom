@@ -1,3 +1,5 @@
+/* helio 14042023 Qualitor ID 21258 - Cancelamento de contratos Chama Doutor.*/
+
 def input param precidmedadesao as recid.
 def  shared variable sfuncod  like func.funcod.
 def var vtime as int.
@@ -60,8 +62,8 @@ input close.
 
 def var vhost as char.
 vhost = "10.2.0.83".
-if vhostname = "SV-CA-DB-DEV" then vhost = "10.2.0.233".
-if vhostname = "SV-CA-DB-QA" then vhost = "10.2.0.44".
+if vhostname = "SV-CA-DB-DEV" then vhost = "sv-ca-db-dev".
+if vhostname = "SV-CA-DB-QA" then vhost = "sv-ca-db-qa".
 
 hentrada = DATASET cancelaAdesao:HANDLE.
 hEntrada:WRITE-JSON("longchar",vLCEntrada, false).
